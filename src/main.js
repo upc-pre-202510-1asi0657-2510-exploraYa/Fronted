@@ -7,8 +7,8 @@ import ToastService from 'primevue/toastservice'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { createPinia } from 'pinia'
-import { faHome, faSearch, faHeart, faUser, faBars, faChartBar, faDollarSign, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
-library.add(faHome, faSearch, faHeart, faUser, faBars, faChartBar, faDollarSign, faSignOutAlt)
+import { faHome, faSearch, faHeart, faUser, faBars, faChartBar, faDollarSign, faSignOutAlt,faList } from '@fortawesome/free-solid-svg-icons'
+library.add(faHome, faSearch, faHeart, faUser, faBars, faChartBar, faDollarSign, faSignOutAlt,faList)
 import Checkbox from 'primevue/checkbox';
 import emailjs from '@emailjs/browser';
 emailjs.init("eCqd55MH38eEgZvfa");

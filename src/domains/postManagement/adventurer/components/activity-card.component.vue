@@ -15,7 +15,7 @@ export default {
     people: Number,
     description: String,
     price: Number,
-    timeDuration: Number,
+    timeDuration: Number
   },
   data() {
     return {

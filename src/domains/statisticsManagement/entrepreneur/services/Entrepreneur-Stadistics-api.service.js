@@ -1,11 +1,10 @@
 import http from "@/shared/services/http-common.js";
 
 export class EntrepreneurStadisticsApiService {
-    // Obtener todas las publicaciones mejor rateadas de un emprendedor
-    async getAllActivitiesOrderByRatingByEntrepreneurId(id) {
-        return http.get(`/publication/order-by-rating/${id}`);
+    async getStatsByPublicationId(id) {
+        return http.get(`/stats/publications/${id}`);
     }
-    async getCommentsCountForPublication(id) {
-        return http.get(`/publication/${id}/comments`);
+    async getAllActivitiesByEntrepreneurId(id) {
+        return http.get(`/publications/entrepreneur/${id}`);
     }
 }

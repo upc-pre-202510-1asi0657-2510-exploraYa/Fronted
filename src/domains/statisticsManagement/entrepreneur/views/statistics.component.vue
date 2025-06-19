@@ -61,7 +61,8 @@ export default {
 
         this.loading = true;
         const entrepreneurStadisticsApiService = new EntrepreneurStadisticsApiService();
-        const response = await entrepreneurStadisticsApiService.getAllActivitiesOrderByRatingByEntrepreneurId(this.entrepreneurId);
+        const response = await entrepreneurStadisticsApiService.getAllActivitiesByEntrepreneurId(this.entrepreneurId);
+
         let publications = [];
         if (response && response.data && Array.isArray(response.data)) {
           publications = response.data;
@@ -72,23 +73,26 @@ export default {
         }
 
         if (publications.length > 0) {
-          const commentPromises = publications.map(pub => {
-            return entrepreneurStadisticsApiService.getCommentsCountForPublication(pub.id || pub.Id)
-                .then(commentsResponse => {
-                  const comments = commentsResponse.data || [];
-                  pub.commentsCount = Array.isArray(comments) ? comments.length : 0;
-                  return pub;
-                })
-                .catch(err => {
-                  console.error(`Error fetching comments for publication ${pub.id || pub.Id}:`, err);
-                  pub.commentsCount = 0;
-                  return pub;
-                });
+          const statsPromises = publications.map(async pub => {
+            try {
+              const statsResponse = await entrepreneurStadisticsApiService.getStatsByPublicationId(pub.id || pub.Id);
+              const stats = statsResponse.data || {};
+              pub.commentsCount = stats.commentCount || 0;
+              pub.averageRating = stats.averageRating || 0;
+            } catch (err) {
+              console.error(`Error fetching stats for publication ${pub.id || pub.Id}:`, err);
+              pub.commentsCount = 0;
+              pub.averageRating = 0;
+            }
+            return pub;
           });
 
-          await Promise.all(commentPromises);
+          await Promise.all(statsPromises);
+
           if (this.currentSort === 'comments') {
             publications.sort((a, b) => b.commentsCount - a.commentsCount);
+          } else if (this.currentSort === 'averageRating' || this.currentSort === 'rating') {
+            publications.sort((a, b) => b.averageRating - a.averageRating);
           }
         }
 

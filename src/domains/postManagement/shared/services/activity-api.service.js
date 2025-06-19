@@ -13,8 +13,13 @@ export class ActivityApiService {
     }
 
     // Publicar un comentario en una actividad
-    async postComment(id, comment) {
-        return http.post(`comments/create-comment`, comment);
+    async postComment(publicationId, comment) {
+        const token = localStorage.getItem('token') || Cookies.get('token');
+        return http.post(
+            `/comments/create-comment`,
+            { publicationId, ...comment },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
     }
 
     async deleteComment(publicationId, commentId) {

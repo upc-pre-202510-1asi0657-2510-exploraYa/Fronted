@@ -63,7 +63,7 @@ export default {
 
         // Mapear los datos del backend a nuestro modelo local
         this.activity = {
-          id: response.data.Id,
+          id: response.data.id,
           title: response.data.nameActivity,
           description: response.data.description,
           capacity: response.data.cantPeople,
@@ -246,7 +246,7 @@ export default {
 
           <!-- Panel de Formulario -->
           <div v-if="activeTabIndex === 1" class="tab-panel">
-            <MakeComment :publicationId="activity.id" @submit-review="handleSubmitReview" />
+            <MakeComment :publicationId="activity.id" @submit-review="addReview" />
           </div>
         </div>
       </div>

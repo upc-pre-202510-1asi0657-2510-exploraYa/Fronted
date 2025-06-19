@@ -14,31 +14,16 @@ export class ActivityApiService {
 
     // Publicar un comentario en una actividad
     async postComment(id, comment) {
-        return http.post(`/publications/${id}/add-comment`, comment);
+        return http.post(`comments/create-comment`, comment);
     }
 
     async deleteComment(publicationId, commentId) {
-        if (!publicationId || !commentId) {
-            throw new Error('Publication ID and Comment ID are required');
-        }
-
-        try {
-            console.log(`Deleting comment ${commentId} from publication ${publicationId}`);
-
-            // Make sure to use the correct endpoint format
-            const response = await http.delete(`/publication/${publicationId}/comments/${commentId}`);
-
-            console.log('Delete comment response:', response);
-            return response;
-        } catch (error) {
-            console.error('Error deleting comment:', error);
-            throw error;
-        }
+        return response = await http.delete(`comments/delete/${publicationId}`);
     }
 
     // Obtener todos los comentarios de una publicación
     async getCommentsByActivityId(id) {
-        return http.get(`/publications/${id}/comments`);
+        return http.get(`comments/public/publication/${id}`);
     }
 
     // src/domains/postManagement/shared/services/activity-api.service.js
@@ -78,10 +63,14 @@ export class ActivityApiService {
         return http.get('/users');
     }
 
-    async addToFavorites(favoritePublication) {
-        return http.post('/favorites/create-favorite-publication', favoritePublication);
+    async addToFavorites(publicationId) {
+        const token = localStorage.getItem('token') || Cookies.get('token');
+        return await http.post(
+            '/favorites/create-favorite-publication',
+            { publicationId }, // <-- Enviar como objeto
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
     }
-
 
     async removeFromFavorites(favoriteId) {
         return http.delete(`/favorites/delete-favorite-publication/${favoriteId}`);

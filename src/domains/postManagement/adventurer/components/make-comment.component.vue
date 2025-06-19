@@ -44,9 +44,9 @@ export default {
 
     submitReview() {
       const newReview = {
+        publicationId: this.$props.publicationId, // Asegúrate de recibir este prop
         content: this.reviewData.comment,
-        rating: this.reviewData.rating,
-        adventureId: 1 // Temporalmente hardcodeado, después lo obtienes del store
+        rating: this.reviewData.rating
       };
 
       this.$emit('submit-review', newReview);

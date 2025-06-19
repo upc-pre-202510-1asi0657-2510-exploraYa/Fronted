@@ -147,12 +147,11 @@ export default {
       try {
         const response = await this.activityApiService.getAllActivities();
 
-        // Mapear los datos del backend a nuestro formato local
         this.activities = response.data.map(item => ({
-          id: item.Id,
+          id: item.Id || item.id, // Soporta ambos casos
           title: item.nameActivity,
           description: item.description,
-          cantPeople: item.cantPeople,
+          people: item.cantPeople,
           image: item.image || 'https://primefaces.org/cdn/primevue/images/usercard.png',
           price: item.cost,
           timeDuration: item.timeDuration,

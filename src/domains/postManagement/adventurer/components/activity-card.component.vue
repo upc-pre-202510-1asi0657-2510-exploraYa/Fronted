@@ -6,7 +6,10 @@ export default {
   name: "ActivityCard",
   components: {},
   props: {
-    id: Number,
+    id: {
+      type: [Number, String],
+      required: true
+    },
     title: String,
     image: String,
     people: Number,
@@ -79,9 +82,8 @@ export default {
             life: 3000
           });
         } else {
-          const response = await this.activityApiService.addToFavorites({
-            publicationId: this.id
-          });
+          // Asegúrate de enviar un número simple
+          const response = await this.activityApiService.addToFavorites(Number(this.id));
           this.isFavorite = true;
           this.favoriteId = response.data.id;
           this.$toast.add({
@@ -92,10 +94,14 @@ export default {
           });
         }
       } catch (error) {
+        let detail = 'Ocurrió un error al procesar tu solicitud';
+        if (error.response && error.response.status === 403) {
+          detail = 'No tienes permisos para realizar esta acción';
+        }
         this.$toast.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Ocurrió un error al procesar tu solicitud',
+          detail,
           life: 3000
         });
         console.error('Error al gestionar favorito:', error);

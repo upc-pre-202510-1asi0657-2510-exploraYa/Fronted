@@ -39,5 +39,10 @@ export default [
     component: FavoritesSection,
     props: true,
     meta: { requiresAuth: true, requiredRoles: ['ROLE_ADVENTUROUS'] }
+  },
+  {
+    path: '/activity/:id',
+    name: 'activity-detail',
+    component: ActivityDetail
   }
 ]

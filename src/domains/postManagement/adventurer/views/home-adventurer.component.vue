@@ -80,9 +80,8 @@ export default {
       try {
         const response = await this.activityApiService.getAllActivities();
 
-        // Mapear los datos del backend al formato esperado por el componente ActivityCard
         this.activities = response.data.map(item => ({
-          id: item.Id,
+          id: item.Id || item.id, // Soporta ambos casos
           title: item.nameActivity,
           description: item.description,
           people: item.cantPeople,
@@ -174,6 +173,7 @@ export default {
         <div v-else class="activities-grid">
           <div v-for="activity in activities" :key="activity.id" class="activity-card-wrapper">
             <ActivityCard
+                v-if="activity && activity.id"
                 :id="activity.id"
                 :title="activity.title"
                 :image="activity.image"
@@ -186,7 +186,6 @@ export default {
         </div>
       </div>
 
-      <!-- Panel de Emprendedores -->
       <!-- Panel de Emprendedores -->
       <div v-if="activeTab === 1" class="tab-content entrepreneurs-panel">
         <h2>Emprendedores destacados</h2>

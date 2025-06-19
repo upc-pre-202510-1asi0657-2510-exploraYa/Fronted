@@ -97,44 +97,32 @@ export default {
         const userCache = {};
         const commentsWithUserNames = [];
 
-        // Procesar cada comentario
         for (const comment of response.data) {
-          const userId = comment.adventureId;
-          let userName;
+          const userId = comment.userId; // <-- usa userId
+          let userName = `Usuario desconocido`;
 
-          // Verificar si el usuario ya está en caché
-          if (!userCache[userId]) {
-            try {
-              // Obtener datos del usuario desde la API
-              const userResponse = await this.activityApiService.getUserById(userId);
-
-              // Si hay respuesta exitosa, usar el nombre real
-              if (userResponse && userResponse.data && userResponse.data.username) {
-                userName = userResponse.data.username;
-              } else {
-                userName = `Usuario ${userId}`;
+          if (userId) {
+            if (!userCache[userId]) {
+              try {
+                const userResponse = await this.activityApiService.getUserById(userId);
+                userName = userResponse?.data?.username || `Usuario ${userId}`;
+                userCache[userId] = userName;
+              } catch (error) {
+                console.error(`Error al obtener datos del usuario ${userId}:`, error);
+                userCache[userId] = userName;
               }
-
-              // Almacenar en caché
-              userCache[userId] = userName;
-            } catch (error) {
-              console.error(`Error al obtener datos del usuario ${userId}:`, error);
-              userName = `Usuario ${userId}`;
-              userCache[userId] = userName;
+            } else {
+              userName = userCache[userId];
             }
-          } else {
-            // Usar el nombre de usuario del caché
-            userName = userCache[userId];
           }
 
-          // Agregar comentario con nombre real
           commentsWithUserNames.push({
             id: comment.id,
-            userName: userName,
+            userName,
             comment: comment.content,
             rating: comment.rating,
-            adventureId: comment.adventureId,
-            date: new Date().toISOString() // Temporal hasta que tengas fechas reales
+            userId, // <-- usa userId aquí también
+            date: comment.createdAt // usa la fecha real
           });
         }
 
@@ -147,11 +135,9 @@ export default {
     },
     async addReview(newReview) {
       try {
-        // Obtener ID del usuario actual del store de autenticación
-        const userId = localStorage.getItem('userId') || 1;
+        const userId = localStorage.getItem('userId');
         const username = localStorage.getItem('username');
 
-        // Crear objeto de comentario según formato API
         const comment = {
           publicationId: this.activity.id,
           content: newReview.content,
@@ -161,19 +147,10 @@ export default {
 
         await this.activityApiService.postComment(this.activity.id, comment);
 
-        // Agregar el comentario localmente para evitar una nueva llamada API
-        this.activity.reviews.unshift({
-          id: Date.now(), // ID temporal hasta obtener uno real
-          userName: username || `Usuario ${userId}`,
-          comment: newReview.content,
-          rating: newReview.rating,
-          adventureId: parseInt(userId),
-          date: new Date().toISOString()
-        });
+        // Refresca la lista de comentarios desde el backend
+        await this.fetchComments();
 
-        // Cambiar a la pestaña de comentarios
         this.activeTabIndex = 0;
-
       } catch (error) {
         console.error('Error al publicar comentario:', error);
       }
@@ -269,7 +246,7 @@ export default {
 
           <!-- Panel de Formulario -->
           <div v-if="activeTabIndex === 1" class="tab-panel">
-            <MakeComment @submit-review="addReview" />
+            <MakeComment :publicationId="activity.id" @submit-review="handleSubmitReview" />
           </div>
         </div>
       </div>

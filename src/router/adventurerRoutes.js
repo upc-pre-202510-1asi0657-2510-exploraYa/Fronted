@@ -4,6 +4,8 @@ import ActivityCardList from "@/domains/postManagement/adventurer/views/activity
 import HomeAdventurer from "@/domains/postManagement/adventurer/views/home-adventurer.component.vue";
 import ActivityDetail from "@/domains/postManagement/adventurer/views/activity-detail.component.vue";
 import FavoritesSection from "@/domains/postManagement/adventurer/views/favorites-section.vue";
+import SubscriptionComponent from "@/domains/subscriptionManagement/views/subscription.component.vue";
+import CategoryDescriptionComponent from "@/domains/subscriptionManagement/views/category-description.component.vue";
 
 export default [
   // Profile Management
@@ -37,6 +39,27 @@ export default [
     path: '/favoritos',
     name: 'Favorites',
     component: FavoritesSection,
+    props: true,
+    meta: { requiresAuth: true, requiredRoles: ['ROLE_ADVENTUROUS'] }
+  },
+  {
+    path: '/publications',
+    name: 'Publications',
+    component: FavoritesSection,
+    props: true,
+    meta: { requiresAuth: true, requiredRoles: ['ROLE_ADVENTUROUS'] }
+  },
+  {
+    path: '/category/:categoryId',
+    name: 'category-description',
+    component: CategoryDescriptionComponent,
+    props: true,
+    meta: { requiresAuth: true, requiredRoles: ['ROLE_ADVENTUROUS'] }
+  },
+  {
+    path:'/categories',
+    name: 'Categories',
+    component: SubscriptionComponent,
     props: true,
     meta: { requiresAuth: true, requiredRoles: ['ROLE_ADVENTUROUS'] }
   },

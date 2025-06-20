@@ -102,6 +102,12 @@ const getHomeRoute = () => {
               <span>Favoritos</span>
             </router-link>
           </div>
+          <div class="nav-item categories" @click="closeMobileMenu">
+              <router-link to="/categories">
+              <font-awesome-icon icon="list" />
+              <span>Categorías</span>
+            </router-link>
+          </div>
           <div class="nav-item account" @click="closeMobileMenu">
             <router-link to="/adventurer/profile">
               <font-awesome-icon icon="user" />

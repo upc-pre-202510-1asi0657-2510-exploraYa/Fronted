@@ -6,6 +6,7 @@ import CommentsList from '@/domains/postManagement/adventurer/components/comment
 import { ActivityApiService } from '@/domains/postManagement/shared/services/activity-api.service.js';
 import { PublicationCategoryApiService } from '@/domains/subscriptionManagement/services/publication-category-api.service.js';
 import { CommentEntity } from '@/domains/postManagement/shared/models/comment.entity.js';
+import Cookies from 'js-cookie';
 
 export default {
   name: 'DetailActivity',
@@ -43,6 +44,9 @@ export default {
         categories: []
       },
       loading: true,
+      isFavorite: false,
+      favoriteId: null,
+      favoriteLoading: false,
       activityApiService: new ActivityApiService(),
       publicationCategoryService: new PublicationCategoryApiService()
     };
@@ -51,6 +55,7 @@ export default {
   async mounted() {
     await this.fetchActivityDetails();
     await this.fetchComments();
+    await this.checkIfFavorite();
   },
 
   methods: {
@@ -148,6 +153,78 @@ export default {
         console.error('Error al obtener comentarios:', error);
       }
     },
+
+    async checkIfFavorite() {
+      try {
+        const userId = Cookies.get('userId');
+        if (!userId) return;
+
+        const response = await this.activityApiService.getFavoritePublicationsByProfileId(userId);
+        const favorites = response.data;
+
+        const foundFavorite = favorites.find(fav => fav.publicationId === this.activity.id);
+        if (foundFavorite) {
+          this.isFavorite = true;
+          this.favoriteId = foundFavorite.id;
+        }
+      } catch (error) {
+        console.error('Error al verificar favoritos:', error);
+      }
+    },
+
+    async toggleFavorite() {
+      try {
+        this.favoriteLoading = true;
+        const userId = Cookies.get('userId');
+
+        if (!userId) {
+          this.$toast.add({
+            severity: 'warn',
+            summary: 'Acción requerida',
+            detail: 'Debes iniciar sesión para guardar favoritos',
+            life: 3000
+          });
+          return;
+        }
+
+        if (this.isFavorite) {
+          await this.activityApiService.removeFromFavorites(this.favoriteId);
+          this.isFavorite = false;
+          this.favoriteId = null;
+          this.$toast.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Eliminado de favoritos',
+            life: 3000
+          });
+        } else {
+          const response = await this.activityApiService.addToFavorites(Number(this.activity.id));
+          this.isFavorite = true;
+          this.favoriteId = response.data.id;
+          this.$toast.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Añadido a favoritos',
+            life: 3000
+          });
+        }
+      } catch (error) {
+        let detail = 'Ocurrió un error al procesar tu solicitud';
+        if (error.response && error.response.status === 403) {
+          detail = 'No tienes permisos para realizar esta acción';
+        }
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail,
+          life: 3000
+        });
+        console.error('Error al gestionar favorito:', error);
+      } finally {
+        this.favoriteLoading = false;
+      }
+    },
+
     async addReview(newReview) {
       try {
         const userId = localStorage.getItem('userId');
@@ -191,7 +268,18 @@ export default {
 
         <!-- Información del producto -->
         <div class="product-info">
-          <h2 class="product-title">{{ activity.title }}</h2>
+          <div class="title-section">
+            <h2 class="product-title">{{ activity.title }}</h2>
+            <button
+                class="favorite-button"
+                @click="toggleFavorite"
+                :disabled="favoriteLoading"
+                :class="{ 'favorite-active': isFavorite }"
+            >
+              <i v-if="favoriteLoading" class="pi pi-spin pi-spinner"></i>
+              <i v-else :class="['pi', isFavorite ? 'pi-heart-fill' : 'pi-heart']"></i>
+            </button>
+          </div>
 
           <div class="activity-meta">
             <div v-for="category in activity.categories" :key="category.id" class="meta-item">
@@ -336,14 +424,23 @@ export default {
   padding: 20px 10px;
 }
 
+.title-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
 .product-title {
   font-size: 2.2rem;
-  margin: 0 0 20px;
+  margin: 0;
   font-weight: 700;
   color: var(--primary-color);
   line-height: 1.2;
   position: relative;
   padding-bottom: 15px;
+  flex: 1;
 }
 
 .product-title::after {
@@ -355,6 +452,54 @@ export default {
   height: 4px;
   background: var(--primary-light);
   border-radius: 2px;
+}
+
+.favorite-button {
+  background: white;
+  border: 2px solid var(--primary-light);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(118, 85, 50, 0.1);
+}
+
+.favorite-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(118, 85, 50, 0.2);
+  border-color: var(--primary-color);
+}
+
+.favorite-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.favorite-button i {
+  font-size: 1.3rem;
+  color: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.favorite-button.favorite-active {
+  background: linear-gradient(135deg, #ff5252, #ff7676);
+  border-color: #ff5252;
+  box-shadow: 0 6px 16px rgba(255, 82, 82, 0.3);
+}
+
+.favorite-button.favorite-active i {
+  color: white;
+}
+
+.favorite-button.favorite-active:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 20px rgba(255, 82, 82, 0.4);
 }
 
 /* Metadatos de actividad con iconos mejorados */
@@ -620,6 +765,19 @@ export default {
   .product-title {
     font-size: 2rem;
   }
+
+  .title-section {
+    gap: 12px;
+  }
+
+  .favorite-button {
+    width: 45px;
+    height: 45px;
+  }
+
+  .favorite-button i {
+    font-size: 1.2rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -652,6 +810,22 @@ export default {
   .product-description {
     font-size: 1rem;
   }
+
+  .title-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .favorite-button {
+    align-self: flex-end;
+    width: 40px;
+    height: 40px;
+  }
+
+  .favorite-button i {
+    font-size: 1.1rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -683,6 +857,19 @@ export default {
 
   .panel-header span {
     font-size: 1.1rem;
+  }
+
+  .title-section {
+    gap: 12px;
+  }
+
+  .favorite-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .favorite-button i {
+    font-size: 1rem;
   }
 }
 

@@ -125,17 +125,19 @@ export default {
     },
     async loadActivities() {
       try {
-        // Primero obtenemos los IDs de las publicaciones de la categoría
         const categoryApi = new PublicationCategoryApiService();
         const publicationsResponse = await categoryApi.getAllPublicationsByCategory(this.categoryId);
-        const publicationIds = publicationsResponse.data;
+        const publicationIds = publicationsResponse.data || [];
 
-        // Luego obtenemos los detalles de cada actividad
+        if (publicationIds.length === 0) {
+          this.activities = [];
+          return;
+        }
+
         const activityApi = new ActivityApiService();
         const activitiesPromises = publicationIds.map(pubId => activityApi.getActivityById(pubId));
         const activitiesResponses = await Promise.all(activitiesPromises);
 
-        // Mapeamos las respuestas a entidades de actividad
         this.activities = activitiesResponses.map(response => {
           const activity = response.data;
           try {
@@ -155,8 +157,13 @@ export default {
           }
         }).filter(Boolean);
       } catch (error) {
-        console.error('Error loading activities:', error);
-        throw error;
+        if (error.response && error.response.status === 404) {
+          this.activities = [];
+        } else {
+          console.error('Error loading activities:', error);
+          this.error = 'Ocurrió un error al cargar las actividades.';
+          throw error;
+        }
       }
     },
     async checkSubscriptionStatus() {

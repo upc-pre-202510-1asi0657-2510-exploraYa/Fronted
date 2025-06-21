@@ -1,13 +1,14 @@
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthenticationStore } from '@/domains/IAM/services/authentication.store.js';
 import Cookies from 'js-cookie';
+import SignOutConfirmationModal from './SignOutConfirmationModal.vue';
 
 const router = useRouter();
 const authStore = useAuthenticationStore();
 const roles = ref([]);
+const showSignOutModal = ref(false);
 
 const fetchRoles = async () => {
   try {
@@ -47,11 +48,15 @@ const closeMobileMenu = () => {
 };
 
 // Update the signOut function in HeaderNav.vue to add more debugging
-const signOut = () => {
-  if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-    authStore.signOut(router);
-  }
+const handleSignOut = () => {
+  showSignOutModal.value = true;
 };
+
+const confirmSignOut = () => {
+  authStore.signOut(router);
+  showSignOutModal.value = false;
+};
+
 const getHomeRoute = () => {
   if (hasAdminRole.value) return '/admin-home';
   if (hasEntrepreneurRole.value) return '/entrepreneur-home';
@@ -134,7 +139,7 @@ const getHomeRoute = () => {
 
         <!-- Botón de cerrar sesión para todos los usuarios -->
         <div class="nav-item sign-out" @click="closeMobileMenu">
-          <a href="#" @click.prevent="signOut">
+          <a href="#" @click.prevent="handleSignOut">
             <font-awesome-icon icon="sign-out-alt" />
             <span>Cerrar Sesión</span>
           </a>
@@ -142,6 +147,11 @@ const getHomeRoute = () => {
 
       </div>
     </nav>
+    <SignOutConfirmationModal 
+      :visible="showSignOutModal" 
+      @close="showSignOutModal = false" 
+      @confirm="confirmSignOut" 
+    />
   </header>
 </template>
 

@@ -169,16 +169,33 @@ export default {
     },
 
     async confirmDelete() {
+      if (!this.publicationToDelete) return;
       try {
         this.loading = true;
         const activityService = new ActivityApiService();
-        const id = this.publicationToDelete.id || this.publicationToDelete.Id;
-        await activityService.deletePublication(id);
+        const publicationCategoryService = new PublicationCategoryApiService();
+        const idToDelete = this.publicationToDelete.id || this.publicationToDelete.Id;
+
+        // Delete associated categories first
+        if (this.publicationToDelete.categories && this.publicationToDelete.categories.length > 0) {
+          for (const category of this.publicationToDelete.categories) {
+            await publicationCategoryService.deleteCatoegoryForPublicationByPublicationId(idToDelete, category.id);
+          }
+        }
+
+        // Then delete the publication
+        await activityService.deletePublication(idToDelete);
+
+        const index = this.publications.findIndex(p => (p.id || p.Id) === idToDelete);
+        if (index > -1) {
+          this.publications.splice(index, 1);
+        }
+
         this.closeDeleteModal();
-        this.fetchPublications();
       } catch (err) {
         this.error = `Error al eliminar la publicación: ${err.message}`;
         console.error("Error deleting publication:", err);
+      } finally {
         this.loading = false;
       }
     },
@@ -187,7 +204,14 @@ export default {
       try {
         const publicationCategoryService = new PublicationCategoryApiService();
         await publicationCategoryService.deleteCatoegoryForPublicationByPublicationId(publicationId, categoryId);
-        await this.fetchPublications();
+        
+        const pubIndex = this.publications.findIndex(p => (p.id || p.Id) === publicationId);
+        if (pubIndex > -1) {
+          const catIndex = this.publications[pubIndex].categories.findIndex(c => c.id === categoryId);
+          if (catIndex > -1) {
+            this.publications[pubIndex].categories.splice(catIndex, 1);
+          }
+        }
       } catch (err) {
         this.error = `Error al eliminar la categoría: ${err.message}`;
         console.error("Error deleting category from publication:", err);

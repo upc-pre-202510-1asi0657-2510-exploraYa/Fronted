@@ -4,6 +4,7 @@ import TabMenu from 'primevue/tabmenu';
 import MakeComment from '@/domains/postManagement/adventurer/components/make-comment.component.vue';
 import CommentsList from '@/domains/postManagement/adventurer/components/comments-list.component.vue';
 import { ActivityApiService } from '@/domains/postManagement/shared/services/activity-api.service.js';
+import { PublicationCategoryApiService } from '@/domains/subscriptionManagement/services/publication-category-api.service.js';
 import { CommentEntity } from '@/domains/postManagement/shared/models/comment.entity.js';
 
 export default {
@@ -38,10 +39,12 @@ export default {
         entrepreneurId: null,
         image: '',
         cost: 0,
-        reviews: []
+        reviews: [],
+        categories: []
       },
       loading: true,
-      activityApiService: new ActivityApiService()
+      activityApiService: new ActivityApiService(),
+      publicationCategoryService: new PublicationCategoryApiService()
     };
   },
 
@@ -61,6 +64,17 @@ export default {
 
         const response = await this.activityApiService.getActivityById(id);
 
+        // Fetch categories
+        let categories = [];
+        try {
+          const catResponse = await this.publicationCategoryService.getCategoriesForPublicationByPublicationId(id);
+          if (catResponse && catResponse.data && Array.isArray(catResponse.data)) {
+            categories = catResponse.data;
+          }
+        } catch (e) {
+          console.error("Error fetching categories for activity:", e);
+        }
+
         // Mapear los datos del backend a nuestro modelo local
         this.activity = {
           id: response.data.id,
@@ -76,7 +90,8 @@ export default {
           image: response.data.image || 'https://primefaces.org/cdn/primevue/images/usercard.png',
           features: [], // Se pueden agregar características estáticas o de otro endpoint
           entrepreneurId: response.data.entrepreneurId,
-          reviews: [] // Los comentarios se cargarán por separado
+          reviews: [], // Los comentarios se cargarán por separado
+          categories: categories
         };
 
         // Habilitar la sección de comentarios solo si los datos de la actividad se cargaron
@@ -179,6 +194,10 @@ export default {
           <h2 class="product-title">{{ activity.title }}</h2>
 
           <div class="activity-meta">
+            <div v-for="category in activity.categories" :key="category.id" class="meta-item">
+              <i class="pi pi-tag"></i>
+              <span>{{ category.name }}</span>
+            </div>
             <div class="meta-item">
               <i class="pi pi-clock"></i>
               <span>{{ activity.duration.hours }}h {{ activity.duration.minutes > 0 ? activity.duration.minutes + 'min' : '' }}</span>
@@ -665,5 +684,21 @@ export default {
   .panel-header span {
     font-size: 1.1rem;
   }
+}
+
+.categories-container {
+  margin: 15px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-badge {
+  background-color: var(--primary-lighter);
+  color: var(--primary-color);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
 }
 </style>

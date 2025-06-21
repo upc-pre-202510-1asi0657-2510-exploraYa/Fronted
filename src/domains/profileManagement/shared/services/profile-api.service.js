@@ -1,4 +1,5 @@
 import http from "@/shared/services/http-common.js";
+import Cookies from "js-cookie";
 
 export class Profile {
 
@@ -16,7 +17,10 @@ export class Profile {
     }
 
     createEntrepreneurProfile(data) {
-        return http.post('/profiles/entrepreneur', data);
+        const token = localStorage.getItem('token') || Cookies.get('token');
+        return http.post('/profiles/entrepreneur/create-entrepreneur', data, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
     }
 
     //ADVENTURER
@@ -41,7 +45,10 @@ export class Profile {
 
     // Crear perfil
     createAdventurerProfile(data) {
-        return http.post('/profiles/adventurer', data);
+        const token = localStorage.getItem('token') || Cookies.get('token');
+        return http.post('/profiles/adventurer/create-adventurer', data, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
     }
 
     /*// Actualizar perfil

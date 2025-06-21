@@ -1,4 +1,19 @@
 <script>
+import { SubscriptionApiService } from "@/domains/subscriptionManagement/services/subscription-api.service.js";
+
+const CATEGORY_IMAGES = {
+  1: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+  2: 'https://cdn-icons-png.flaticon.com/512/2935/2935359.png',
+  3: 'https://cdn-icons-png.flaticon.com/512/616/616494.png',
+  4: 'https://cdn-icons-png.flaticon.com/512/201/201818.png',
+  5: 'https://cdn-icons-png.flaticon.com/512/854/854878.png',
+  6: 'https://cdn-icons-png.flaticon.com/512/616/616601.png',
+  7: 'https://cdn-icons-png.flaticon.com/512/616/616490.png',
+  8: 'https://cdn-icons-png.flaticon.com/512/854/854894.png',
+  9: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+  10: 'https://cdn-icons-png.flaticon.com/512/854/854929.png'
+};
+
 export default {
   name: "ActivityFormModal",
   props: {
@@ -19,11 +34,18 @@ export default {
         timeDuration: '',
         image: '',
         cantPeople: '',
-        cost: ''
+        cost: '',
+        categoryId: null
       },
       imageFile: null,
-      imagePreview: null
+      imagePreview: null,
+      categories: [],
+      dropdownOpen: false
     }
+  },
+  created() {
+    this.subscriptionApi = new SubscriptionApiService();
+    this.fetchCategories();
   },
   watch: {
     editingPublication(newValue) {
@@ -34,7 +56,8 @@ export default {
           timeDuration: newValue.timeDuration,
           image: newValue.image,
           cantPeople: newValue.cantPeople,
-          cost: newValue.cost
+          cost: newValue.cost,
+          categoryId: newValue.categoryId || null
         };
         this.imagePreview = newValue.image;
       } else {
@@ -48,6 +71,34 @@ export default {
     }
   },
   methods: {
+    async fetchCategories() {
+      try {
+        const response = await this.subscriptionApi.getAllCategories();
+        this.categories = response.data.map(category => ({
+          ...category,
+          image: CATEGORY_IMAGES[category.id] || null
+        }));
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    },
+    getCategoryImage(categoryId) {
+      if (!categoryId) return null;
+      const category = this.categories.find(c => c.id === categoryId);
+      return category ? category.image : null;
+    },
+    getCategoryName(categoryId) {
+      if (!categoryId) return 'Seleccionar categoría';
+      const category = this.categories.find(c => c.id === categoryId);
+      return category ? category.name : 'Seleccionar categoría';
+    },
+    toggleDropdown() {
+      this.dropdownOpen = !this.dropdownOpen;
+    },
+    selectCategory(categoryId) {
+      this.publication.categoryId = categoryId;
+      this.dropdownOpen = false;
+    },
     savePublication() {
       if (this.imageFile) {
         this.readFileAsBase64(this.imageFile, (base64Image) => {
@@ -68,7 +119,8 @@ export default {
         timeDuration: '',
         image: '',
         cantPeople: '',
-        cost: ''
+        cost: '',
+        categoryId: null
       };
       this.imageFile = null;
       this.imagePreview = null;
@@ -171,6 +223,26 @@ export default {
             <input type="number" id="price" v-model="publication.cost" required min="0" step="0.01">
           </div>
 
+          <div class="form-group">
+            <label>Categoría</label>
+            <div class="custom-dropdown">
+              <div class="dropdown-selected" @click="toggleDropdown">
+                <span class="selected-text">{{ getCategoryName(publication.categoryId) }}</span>
+                <img v-if="getCategoryImage(publication.categoryId)" :src="getCategoryImage(publication.categoryId)" alt="" class="category-icon-display">
+                <i class="fas fa-chevron-down dropdown-arrow" :class="{ 'rotated': dropdownOpen }"></i>
+              </div>
+              <ul v-if="dropdownOpen" class="dropdown-list">
+                <li @click="selectCategory(null)">
+                  <span>Sin categoría</span>
+                </li>
+                <li v-for="cat in categories" :key="cat.id" @click="selectCategory(cat.id)">
+                  <span>{{ cat.name }}</span>
+                  <img v-if="cat.image" :src="cat.image" :alt="cat.name" class="category-icon-option">
+                </li>
+              </ul>
+            </div>
+          </div>
+
           <div class="form-actions">
             <button type="button" @click="closeModal" class="btn-secondary">Cancelar</button>
             <button type="submit" class="btn-primary">
@@ -248,7 +320,7 @@ export default {
 }
 
 .modal-body {
-  padding: 25px;
+  padding: 10px 25px 25px;
 }
 
 .form-group {
@@ -260,6 +332,7 @@ export default {
   margin-bottom: 8px;
   font-weight: 600;
   color: var(--text-dark);
+  font-size: 14px;
 }
 
 .form-group input, .form-group textarea {
@@ -267,18 +340,17 @@ export default {
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  transition: border 0.3s;
-  font-size: 16px;
+  transition: border-color 0.2s;
+  background-color: #f9f9f9;
 }
 
 .form-group input:focus, .form-group textarea:focus {
-  border-color: var(--primary-light);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  border-color: var(--primary-color);
 }
 
 .form-group textarea {
-  min-height: 120px;
+  min-height: 100px;
   resize: vertical;
 }
 
@@ -419,4 +491,81 @@ export default {
 .remove-image-btn:hover {
   background-color: #d32f2f;
 }
+
+/* CUSTOM DROPDOWN STYLES */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  user-select: none;
+}
+
+.selected-text {
+  flex-grow: 1;
+  font-size: 14px;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s ease-in-out;
+  font-size: 12px;
+  color: #888;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dropdown-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-list li:hover {
+  background-color: #f0f0f0;
+}
+
+.category-icon-option {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.category-icon-display {
+  width: 24px;
+  height: 24px;
+  margin: 0 10px;
+}
+/* END CUSTOM DROPDOWN STYLES */
 </style>

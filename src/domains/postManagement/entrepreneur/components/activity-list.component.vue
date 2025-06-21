@@ -11,13 +11,16 @@ export default {
       default: false
     }
   },
-  emits: ['edit', 'delete'],
+  emits: ['edit', 'delete', 'delete-category'],
   methods: {
     onEdit(publication) {
       this.$emit('edit', publication);
     },
     onDelete(publication) {
       this.$emit('delete', publication);
+    },
+    onDeleteCategory(publication, category) {
+      this.$emit('delete-category', { publicationId: publication.id, categoryId: category.id });
     }
   }
 }
@@ -52,6 +55,12 @@ export default {
         <div class="card-content">
           <h3 class="card-title">{{ pub.nameActivity }}</h3>
           <p class="description">{{ pub.description }}</p>
+          <div v-if="pub.categories && pub.categories.length > 0" class="categories-container">
+            <span v-for="category in pub.categories" :key="category.id" class="category-badge">
+              {{ category.name }}
+              <i class="fas fa-times delete-category-icon" @click.stop="onDeleteCategory(pub, category)"></i>
+            </span>
+          </div>
           <div class="publication-details">
             <div class="detail-item">
               <i class="fas fa-clock detail-icon"></i>
@@ -174,6 +183,38 @@ export default {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.categories-container {
+  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-badge {
+  background-color: var(--primary-lighter);
+  color: var(--primary-color);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.delete-category-icon {
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 10px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 2px;
+}
+
+.delete-category-icon:hover {
+  opacity: 1;
+  color: var(--error-color);
 }
 
 .publication-details {

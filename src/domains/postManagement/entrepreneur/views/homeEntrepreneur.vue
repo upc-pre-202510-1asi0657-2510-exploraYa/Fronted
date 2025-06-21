@@ -1,6 +1,7 @@
 <script>
 import { ActivityApiService } from '@/domains/postManagement/shared/services/activity-api.service.js';
 import { AuthenticationService } from '@/domains/IAM/services/authentication.service.js';
+import { PublicationCategoryApiService } from '@/domains/subscriptionManagement/services/publication-category-api.service.js';
 import ActivityList from '../components/activity-list.component.vue';
 import ConfirmationModal from '../components/confirmation-modal.component.vue';
 import ActivityFormModal from '../components/activity-form-modal.component.vue'
@@ -71,17 +72,35 @@ export default {
 
         this.loading = true;
         const activityService = new ActivityApiService();
+        const publicationCategoryService = new PublicationCategoryApiService();
         const response = await activityService.getAllActivitiesByEntrepreneurId(this.entrepreneurId);
 
+        let rawPublications = [];
         if (response && response.data && Array.isArray(response.data)) {
-          this.publications = response.data;
+          rawPublications = response.data;
         } else if (response && response.data && !Array.isArray(response.data)) {
-          this.publications = [response.data];
+          rawPublications = [response.data];
         } else if (response && Array.isArray(response)) {
-          this.publications = response;
+          rawPublications = response;
         } else {
           this.publications = [];
         }
+        
+        if (rawPublications.length > 0) {
+          this.publications = await Promise.all(
+              rawPublications.map(async (pub) => {
+                try {
+                  const catResponse = await publicationCategoryService.getCategoriesForPublicationByPublicationId(pub.id || pub.Id);
+                  const categories = (catResponse.data && Array.isArray(catResponse.data)) ? catResponse.data : [];
+                  return { ...pub, categories: categories };
+                } catch (err) {
+                  console.error(`Error fetching categories for publication ${pub.id || pub.Id}:`, err);
+                  return { ...pub, categories: [] };
+                }
+              })
+          );
+        }
+
       } catch (err) {
         this.error = `Error al cargar publicaciones: ${err.message}`;
         console.error("Error fetching publications:", err);
@@ -114,18 +133,30 @@ export default {
       try {
         this.loading = true;
         const activityService = new ActivityApiService();
+        const publicationCategoryService = new PublicationCategoryApiService();
+
+        const { categoryId, ...publicationDetails } = publicationData;
 
         if (this.editingPublication) {
+          const publicationId = this.editingPublication.id || this.editingPublication.Id;
           await activityService.updatePublication(
-              this.editingPublication.id || this.editingPublication.Id,
-              publicationData
+              publicationId,
+              publicationDetails
           );
+          if (categoryId) {
+            await publicationCategoryService.assingCategoryToPost(publicationId, categoryId);
+          }
         } else {
           const publication = {
-            ...publicationData,
+            ...publicationDetails,
             entrepreneurId: this.entrepreneurId
           };
-          await activityService.postPublication(publication);
+          const response = await activityService.postPublication(publication);
+
+          if (response && response.data && response.data.id && categoryId) {
+            const newPublicationId = response.data.id;
+            await publicationCategoryService.assingCategoryToPost(newPublicationId, categoryId);
+          }
         }
 
         this.closeFormModal();
@@ -149,6 +180,17 @@ export default {
         this.error = `Error al eliminar la publicación: ${err.message}`;
         console.error("Error deleting publication:", err);
         this.loading = false;
+      }
+    },
+
+    async handleDeleteCategory({ publicationId, categoryId }) {
+      try {
+        const publicationCategoryService = new PublicationCategoryApiService();
+        await publicationCategoryService.deleteCatoegoryForPublicationByPublicationId(publicationId, categoryId);
+        await this.fetchPublications();
+      } catch (err) {
+        this.error = `Error al eliminar la categoría: ${err.message}`;
+        console.error("Error deleting category from publication:", err);
       }
     }
   }
@@ -179,6 +221,7 @@ export default {
         :loading="loading"
         @edit="openFormModal"
         @delete="openDeleteModal"
+        @delete-category="handleDeleteCategory"
     />
 
     <!-- Modals -->

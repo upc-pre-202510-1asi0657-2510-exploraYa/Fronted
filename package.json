@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node --max-http-header-size=16384 ./node_modules/vite/bin/vite.js",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "npx vite build",
+    "preview": "npx vite preview",
+    "start": "npx vite preview --port $PORT --host 0.0.0.0",
+    "build-check": "node scripts/build-check.cjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -15,19 +17,24 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@unhead/vue": "^2.0.8",
+    "@vitejs/plugin-vue": "^5.2.3",
     "axios": "^1.9.0",
     "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.2",
     "primeicons": "^7.0.0",
     "primevue": "^3.35.0",
+    "terser": "^5.24.0",
+    "vite": "^6.2.4",
     "vue": "^3.5.13",
     "vue-recaptcha": "^3.0.0-alpha.6",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.3",
-    "vite": "^6.2.4",
     "vite-plugin-vue-devtools": "^7.7.2"
+  },
+  "engines": {
+    "node": ">=18.17.0",
+    "npm": ">=8.0.0"
   }
 }

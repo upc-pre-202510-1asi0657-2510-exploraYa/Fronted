@@ -36,10 +36,36 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: true
+    host: true,
+    historyApiFallback: {
+      index: '/index.html',
+      rewrites: [
+        { from: /^\/sign-in/, to: '/index.html' },
+        { from: /^\/sign-up/, to: '/index.html' },
+        { from: /^\/admin/, to: '/index.html' },
+        { from: /^\/activity/, to: '/index.html' },
+        { from: /^\/profile/, to: '/index.html' },
+        { from: /^\/statistics/, to: '/index.html' },
+        { from: /^\/dashboard/, to: '/index.html' },
+        { from: /.*/, to: '/index.html' }
+      ]
+    }
   },
   preview: {
     port: 3000,
-    host: true
+    host: true,
+    historyApiFallback: {
+      index: '/index.html',
+      rewrites: [
+        { from: /^\/sign-in/, to: '/index.html' },
+        { from: /^\/sign-up/, to: '/index.html' },
+        { from: /^\/admin/, to: '/index.html' },
+        { from: /^\/activity/, to: '/index.html' },
+        { from: /^\/profile/, to: '/index.html' },
+        { from: /^\/statistics/, to: '/index.html' },
+        { from: /^\/dashboard/, to: '/index.html' },
+        { from: /.*/, to: '/index.html' }
+      ]
+    }
   }
 })

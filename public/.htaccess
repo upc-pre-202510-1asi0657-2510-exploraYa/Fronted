@@ -1,0 +1,30 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Handle Vue Router in history mode
+  RewriteBase /
+  
+  # Handle specific routes
+  RewriteRule ^sign-in$ /index.html [L]
+  RewriteRule ^sign-up$ /index.html [L]
+  RewriteRule ^sign-in-admin$ /index.html [L]
+  RewriteRule ^sign-up-admin$ /index.html [L]
+  RewriteRule ^admin-home$ /index.html [L]
+  RewriteRule ^adventurous-home$ /index.html [L]
+  RewriteRule ^entrepreneur-home$ /index.html [L]
+  RewriteRule ^dashboard$ /index.html [L]
+  
+  # Handle dynamic routes
+  RewriteRule ^activity/.*$ /index.html [L]
+  RewriteRule ^profile/.*$ /index.html [L]
+  RewriteRule ^statistics/.*$ /index.html [L]
+  RewriteRule ^admin/.*$ /index.html [L]
+  
+  # Handle all other routes
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+  
+  # Handle favicon
+  RewriteRule ^favicon\.ico$ /logo.ico [L]
+</IfModule> 

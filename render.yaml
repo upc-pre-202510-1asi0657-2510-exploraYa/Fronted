@@ -6,6 +6,42 @@ services:
     staticPublishPath: ./dist
     routes:
       - type: rewrite
+        source: /sign-in
+        destination: /index.html
+      - type: rewrite
+        source: /sign-up
+        destination: /index.html
+      - type: rewrite
+        source: /sign-in-admin
+        destination: /index.html
+      - type: rewrite
+        source: /sign-up-admin
+        destination: /index.html
+      - type: rewrite
+        source: /admin-home
+        destination: /index.html
+      - type: rewrite
+        source: /adventurous-home
+        destination: /index.html
+      - type: rewrite
+        source: /entrepreneur-home
+        destination: /index.html
+      - type: rewrite
+        source: /dashboard
+        destination: /index.html
+      - type: rewrite
+        source: /activity/*
+        destination: /index.html
+      - type: rewrite
+        source: /profile/*
+        destination: /index.html
+      - type: rewrite
+        source: /statistics/*
+        destination: /index.html
+      - type: rewrite
+        source: /admin/*
+        destination: /index.html
+      - type: rewrite
         source: /*
         destination: /index.html
     envVars:

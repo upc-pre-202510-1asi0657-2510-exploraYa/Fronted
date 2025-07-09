@@ -1,2 +1,22 @@
 # Redirects para SPA (Single Page Application)
-/*    /index.html   200 
+# Rutas específicas
+/sign-in              /index.html   200
+/sign-up              /index.html   200
+/sign-in-admin        /index.html   200
+/sign-up-admin        /index.html   200
+/admin-home           /index.html   200
+/adventurous-home     /index.html   200
+/entrepreneur-home    /index.html   200
+/dashboard            /index.html   200
+
+# Rutas con parámetros
+/activity/*           /index.html   200
+/profile/*            /index.html   200
+/statistics/*         /index.html   200
+/admin/*              /index.html   200
+
+# Fallback para todas las demás rutas
+/*                    /index.html   200
+
+# Manejo de favicon
+/favicon.ico          /logo.ico     200 

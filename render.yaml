@@ -2,7 +2,7 @@ services:
   - type: web
     name: aventurape-frontend
     env: static
-    buildCommand: npm ci --only=production && npm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     routes:
       - type: rewrite
